@@ -64,23 +64,30 @@ body{ overflow:hidden; }
 /* ── FLASH ── */
 #flash-screen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(239,68,68,0.45);opacity:0;pointer-events:none;z-index:4;transition:opacity 0.1s ease-out;}
 
-/* ── IN-GAME CONTROL BUTTONS ── */
+/* ── EXTERNAL CONTROL BUTTONS (below game, right-aligned) ── */
 #in-game-controls{
-  position:absolute;
-  right:10px;
-  bottom:14px;
+  width:100%;
+  max-width:700px;
+  display:flex;
+  flex-direction:row;
+  justify-content:flex-end;
+  gap:14px;
+  padding:8px 10px 4px;
+  flex-shrink:0;
+  z-index:6;
+}
+.ctrl-group{
   display:flex;
   flex-direction:column;
-  gap:8px;
-  z-index:6;
-  pointer-events:all;
+  align-items:center;
+  gap:2px;
 }
 .ctrl-btn{
-  width:clamp(38px,8vw,48px);
-  height:clamp(38px,8vw,48px);
+  width:clamp(50px,13vw,64px);
+  height:clamp(50px,13vw,64px);
   border-radius:50%;
   border:2px solid rgba(255,255,255,0.5);
-  font-size:clamp(14px,3.5vw,18px);
+  font-size:clamp(20px,5vw,26px);
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:transform 0.07s;
@@ -89,9 +96,9 @@ body{ overflow:hidden; }
   backdrop-filter:blur(6px);
 }
 .ctrl-btn:active{transform:scale(0.88);}
-#jump-btn{background:rgba(59,130,246,0.45);box-shadow:0 4px 0 rgba(30,58,138,0.6),0 6px 18px rgba(59,130,246,0.3);}
-#crouch-btn{background:rgba(249,115,22,0.45);box-shadow:0 4px 0 rgba(124,45,18,0.6),0 6px 18px rgba(249,115,22,0.3);}
-.ctrl-label{font-size:8px;color:rgba(255,255,255,0.7);text-align:center;margin-top:2px;letter-spacing:1px;}
+#jump-btn{background:rgba(59,130,246,0.55);box-shadow:0 5px 0 rgba(30,58,138,0.7),0 8px 20px rgba(59,130,246,0.35);}
+#crouch-btn{background:rgba(249,115,22,0.55);box-shadow:0 5px 0 rgba(124,45,18,0.7),0 8px 20px rgba(249,115,22,0.35);}
+.ctrl-label{font-size:9px;color:rgba(255,255,255,0.65);text-align:center;letter-spacing:1.5px;}
 
 /* ══════════════════════════════════════════
    OVERLAY BASE
@@ -246,7 +253,6 @@ body{ overflow:hidden; }
 #confetti-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:25;}
 
 /* ── SHARED COUNTDOWN OVERLAY ── */
-/* Used by BOTH pause-resume AND quiz-correct — same look, same z-index */
 #resume-countdown-overlay{
   display:none;
   position:absolute;
@@ -313,17 +319,6 @@ body{ overflow:hidden; }
 
   <canvas id="gameCanvas"></canvas>
 
-  <div id="in-game-controls">
-    <div>
-      <button class="ctrl-btn" id="jump-btn">⬆</button>
-      <div class="ctrl-label">JUMP</div>
-    </div>
-    <div>
-      <button class="ctrl-btn" id="crouch-btn">⬇</button>
-      <div class="ctrl-label">SLIDE</div>
-    </div>
-  </div>
-
   <!-- QUIZ -->
   <div id="quiz-screen" class="overlay">
     <div class="quiz-left">
@@ -338,7 +333,7 @@ body{ overflow:hidden; }
     </div>
   </div>
 
-  <!-- SHARED COUNTDOWN OVERLAY — used by both pause-resume AND quiz-correct -->
+  <!-- SHARED COUNTDOWN OVERLAY -->
   <div id="resume-countdown-overlay">
     <div id="resume-countdown-num"></div>
   </div>
@@ -376,6 +371,18 @@ body{ overflow:hidden; }
   </div>
 </div>
 
+<!-- EXTERNAL CONTROLS — below game, right-aligned -->
+<div id="in-game-controls">
+  <div class="ctrl-group">
+    <button class="ctrl-btn" id="jump-btn">⬆</button>
+    <div class="ctrl-label">JUMP</div>
+  </div>
+  <div class="ctrl-group">
+    <button class="ctrl-btn" id="crouch-btn">⬇</button>
+    <div class="ctrl-label">SLIDE</div>
+  </div>
+</div>
+
 <!-- HISTORY -->
 <div id="history-section">
   <h3>📋 History</h3>
@@ -401,17 +408,22 @@ let CW, CH, GROUND;
 
 // ═══════════════════════════════════════════
 //  RESPONSIVE SIZING
+//  Aspect ratio nudged from 700/260 (~2.69:1) to 700/310 (~2.26:1)
+//  — slightly closer to square for better mobile readability,
+//    without changing any in-game object sizes.
 // ═══════════════════════════════════════════
-const CANVAS_ASPECT = 700 / 260;
+const CANVAS_ASPECT = 700 / 310;
 
 function sizeCanvas(){
   const wrap        = document.getElementById('game-wrap');
   const titleEl     = document.getElementById('page-title');
+  const controlsEl  = document.getElementById('in-game-controls');
   const historyEl   = document.getElementById('history-section');
 
-  const titleH   = titleEl.offsetHeight   || 26;
-  const historyH = historyEl.offsetHeight || 52;
-  const chrome   = titleH + historyH + 8;
+  const titleH    = titleEl.offsetHeight    || 26;
+  const controlsH = controlsEl.offsetHeight || 72;
+  const historyH  = historyEl.offsetHeight  || 52;
+  const chrome    = titleH + controlsH + historyH + 8;
 
   const vpW = window.innerWidth;
   const vpH = window.innerHeight;
@@ -431,6 +443,9 @@ function sizeCanvas(){
   wrap.style.width  = CW + 'px';
   wrap.style.height = CH + 'px';
   wrap.style.setProperty('--gh', CH + 'px');
+
+  // Keep controls row same width as game wrap
+  controlsEl.style.width = CW + 'px';
 
   gameCanvas.width   = CW;
   gameCanvas.height  = CH;
@@ -456,7 +471,6 @@ function getAudioCtx(){
   return audioCtx;
 }
 
-// ── Tone helper ───────────────────────────────
 function playTone(freq, type, gainVal, duration, decay, dest){
   const ac = getAudioCtx();
   const o = ac.createOscillator();
@@ -487,7 +501,6 @@ function playNoise(gainVal, duration, filterFreq, dest){
   src.start(); src.stop(ac.currentTime + duration + 0.05);
 }
 
-// ── GAME OVER sound — descending doom ────────
 function playGameOverSound(){
   const ac = getAudioCtx();
   [[220,0],[196,0.15],[174,0.30],[130,0.50]].forEach(([f,t])=>{
@@ -500,14 +513,11 @@ function playGameOverSound(){
     g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+t+0.8);
     o.start(ac.currentTime+t); o.stop(ac.currentTime+t+0.9);
   });
-  // Low thud rumble
   setTimeout(()=>playNoise(0.22, 0.35, 180), 600);
 }
 
-// ── HEALTH PICKUP sound — ascending sparkle ───
 function playHealthPickupSound(){
   const ac = getAudioCtx();
-  // Happy ascending arpeggio C-E-G-C
   [[523,0],[659,0.07],[784,0.14],[1046,0.21]].forEach(([f,t])=>{
     const o = ac.createOscillator();
     const g = ac.createGain();
@@ -517,7 +527,6 @@ function playHealthPickupSound(){
     g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+t+0.2);
     o.start(ac.currentTime+t); o.stop(ac.currentTime+t+0.22);
   });
-  // Extra sparkle overtone
   const ac2 = getAudioCtx();
   const o2 = ac2.createOscillator(); const g2 = ac2.createGain();
   o2.connect(g2); g2.connect(ac2.destination);
@@ -527,26 +536,21 @@ function playHealthPickupSound(){
   o2.start(ac2.currentTime+0.25); o2.stop(ac2.currentTime+0.45);
 }
 
-// ── BACKGROUND MUSIC ─────────────────────────
-// Energetic chiptune runner groove: kick+snare+hihat + bass + melody
 const BPM = 150;
 const BEAT = 60/BPM;
 const LOOP_BEATS = 8;
 
-// Bass pattern: [freq, beatOffset, durationInBeats]
 const BASS_PAT = [
   [110,0,0.9],[110,1,0.45],[138,1.5,0.45],[146,2,0.9],
   [130,3,0.45],[110,3.5,0.45],[98,4,0.9],[110,5,0.9],
   [116,6,0.45],[130,6.5,0.45],[146,7,0.45],[164,7.5,0.45]
 ];
-// Lead melody
 const LEAD_PAT = [
   [440,0,0.45],[523,0.5,0.45],[587,1,0.9],[659,2,0.45],
   [587,2.5,0.45],[523,3,0.45],[440,3.5,0.45],[392,4,0.9],
   [440,5,0.45],[523,5.5,0.45],[587,6,0.45],[659,6.5,0.45],
   [784,7,0.9]
 ];
-// Counter-melody (high, airy)
 const COUNTER_PAT = [
   [1174,0.25,0.3],[1318,1.25,0.3],[1174,2.25,0.3],[988,3.25,0.45],
   [1046,4.25,0.3],[1174,5.25,0.3],[1318,6.25,0.3],[1568,7.25,0.45]
@@ -557,7 +561,6 @@ function scheduleBgLoop(startTime){
   const ac = getAudioCtx();
   const dest = bgGainNode || ac.destination;
 
-  // ── Kick drum (every beat) ──
   for(let b=0;b<LOOP_BEATS;b++){
     const t = startTime + b*BEAT;
     const o = ac.createOscillator();
@@ -571,10 +574,9 @@ function scheduleBgLoop(startTime){
     o.start(t); o.stop(t+0.2);
   }
 
-  // ── Snare (offbeats) ──
   for(let b=1;b<LOOP_BEATS;b+=2){
     [b, b+0.5].forEach((beat,bi)=>{
-      if(bi===1 && Math.random()<0.4) return; // occasional ghost note skip
+      if(bi===1 && Math.random()<0.4) return;
       const t = startTime + beat*BEAT;
       const bufSize = Math.floor(ac.sampleRate * 0.07);
       const buf = ac.createBuffer(1, bufSize, ac.sampleRate);
@@ -588,7 +590,6 @@ function scheduleBgLoop(startTime){
     });
   }
 
-  // ── Hi-hat 16th notes ──
   for(let b=0;b<LOOP_BEATS*4;b++){
     const t = startTime + b*(BEAT/4);
     const vel = b%4===0?0.06:(b%2===0?0.04:0.025);
@@ -603,7 +604,6 @@ function scheduleBgLoop(startTime){
     src.start(t); src.stop(t+0.03);
   }
 
-  // ── Bass line ──
   BASS_PAT.forEach(([freq, beat, dur])=>{
     const t = startTime + beat*BEAT;
     const o = ac.createOscillator();
@@ -615,7 +615,6 @@ function scheduleBgLoop(startTime){
     o.start(t); o.stop(t + dur*BEAT);
   });
 
-  // ── Lead melody ──
   LEAD_PAT.forEach(([freq, beat, dur])=>{
     const t = startTime + beat*BEAT;
     const o = ac.createOscillator();
@@ -627,7 +626,6 @@ function scheduleBgLoop(startTime){
     o.start(t); o.stop(t + dur*BEAT);
   });
 
-  // ── Counter melody (quiet, airy) ──
   COUNTER_PAT.forEach(([freq, beat, dur])=>{
     const t = startTime + beat*BEAT;
     const o = ac.createOscillator();
@@ -691,31 +689,19 @@ let fallingLeaves=[], bgTrees=[];
 let victoryLoopId=null, matchHistory=[];
 
 const BASE_SPEED = 3.8;
-const MAX_SPEED  = 13.5;  // higher ceiling — only reached near score 3000
+const MAX_SPEED  = 13.5;
 const WIN_SCORE  = 3000;
 let gameSpeed = BASE_SPEED;
 
-// ── Health spawn tracking ──
 let lastHealthScore = 0;
 const HEALTH_SCORE_INTERVAL = 200;
 let healthSpawnReady = false;
 
-// ── Obstacle timing ──
 let pixelsSinceLastObstacle = 0;
 let nextObstacleGap = 0;
 
-// ── Pattern system ──
-// Controls what comes next. 'pending' is a queued type override for pairs/sequences.
 let obstaclePattern = { pending: null, lastType: null, consecutiveSame: 0 };
 
-// ─────────────────────────────────────────────────────────
-//  SPEED CURVE
-//  Phase 1 (0–500):    3.8 → 6.0   gentle warmup
-//  Phase 2 (500–1200): 6.0 → 8.5   steady climb
-//  Phase 3 (1200–2000):8.5 → 10.5  noticeable pressure
-//  Phase 4 (2000–2600):10.5→ 12.2  serious intensity
-//  Phase 5 (2600–3000):12.2→ 13.5  elite difficulty
-// ─────────────────────────────────────────────────────────
 function calcSpeed(ds){
   if(ds < 500)        return Math.min(BASE_SPEED + ds * 0.0044,           6.0);
   if(ds < 1200)       return Math.min(6.0 + (ds-500)  * 0.00357,         8.5);
@@ -724,21 +710,15 @@ function calcSpeed(ds){
   return               Math.min(12.2+ (ds-2600) * 0.00325,              MAX_SPEED);
 }
 
-// ─────────────────────────────────────────────────────────
-//  GAP CURVE  (pixels between obstacles)
-//  Gaps shrink with score AND speed, keeping reaction window
-//  from collapsing entirely while still feeling brutal late.
-//  Reaction window = gap / gameSpeed  (in frames @ 60fps)
-// ─────────────────────────────────────────────────────────
 function calcNextObstacleGap(ds){
   let base;
   if     (ds < 100)   base = 980;
-  else if(ds < 400)   base = 980 - (ds-100)*0.93;   // 980→700
-  else if(ds < 800)   base = 700 - (ds-400)*0.45;   // 700→520
-  else if(ds < 1400)  base = 520 - (ds-800)*0.20;   // 520→400
-  else if(ds < 2000)  base = 400 - (ds-1400)*0.083; // 400→350
-  else if(ds < 2600)  base = 350 - (ds-2000)*0.067; // 350→310
-  else                base = 310 - (ds-2600)*0.025; // 310→300 plateau
+  else if(ds < 400)   base = 980 - (ds-100)*0.93;
+  else if(ds < 800)   base = 700 - (ds-400)*0.45;
+  else if(ds < 1400)  base = 520 - (ds-800)*0.20;
+  else if(ds < 2000)  base = 400 - (ds-1400)*0.083;
+  else if(ds < 2600)  base = 350 - (ds-2000)*0.067;
+  else                base = 310 - (ds-2600)*0.025;
   base = Math.max(base, 295);
   const jitter = base * 0.22;
   return Math.round(base - jitter*0.5 + Math.random()*jitter);
@@ -746,20 +726,7 @@ function calcNextObstacleGap(ds){
 
 function setNextGap(ds){ nextObstacleGap = calcNextObstacleGap(ds); pixelsSinceLastObstacle=0; }
 
-// ─────────────────────────────────────────────────────────
-//  OBSTACLE TYPE SELECTOR
-//  Returns one of: 'cigarette' | 'barrel' | 'tall_barrel'
-//
-//  Design goals by phase:
-//  0–150:   Only ground obstacles (cigarette/barrel). No airborne yet.
-//  150–500: Introduce tall_barrel rarely (~15%). Mix jump/crouch 60/40.
-//  500–1000:Balanced mix. Start using deliberate alternation.
-//  1000–1800:Enforce strict alternation — never 3 same in a row.
-//  1800–2500:Rapid alternation + occasional tightly-spaced pairs.
-//  2500–3000:Aggressive mix, forced alternation, ~35% airborne.
-// ─────────────────────────────────────────────────────────
 function pickObstacleType(ds){
-  // If a pair/sequence queued a specific next type, use it.
   if(obstaclePattern.pending !== null){
     const t = obstaclePattern.pending;
     obstaclePattern.pending = null;
@@ -773,67 +740,48 @@ function pickObstacleType(ds){
   let type;
 
   if(ds < 150){
-    // Phase 0: Ground only, gentle intro
     type = r < 0.55 ? 'cigarette' : 'barrel';
-
   } else if(ds < 500){
-    // Phase 1: Introduce airborne. Still mostly jump.
-    // Airborne = 15%, Ground jump = 55%, Ground crouch = 30%
     if(r < 0.15)      type = 'tall_barrel';
     else if(r < 0.70) type = 'cigarette';
     else              type = 'barrel';
-    // Prevent 3 same ground in a row
     if(consec >= 2 && last === type && type !== 'tall_barrel'){
       type = (type === 'cigarette') ? 'barrel' : 'cigarette';
     }
-
   } else if(ds < 1000){
-    // Phase 2: Balanced. Airborne = 22%. Alternate more.
     if(r < 0.22)      type = 'tall_barrel';
     else if(r < 0.60) type = 'cigarette';
     else              type = 'barrel';
-    // Hard cap: never 2 same in a row in this phase
     if(consec >= 2 && last === type){
       if(type === 'tall_barrel') type = r < 0.5 ? 'cigarette' : 'barrel';
       else if(type === 'cigarette') type = r < 0.4 ? 'tall_barrel' : 'barrel';
       else type = r < 0.4 ? 'tall_barrel' : 'cigarette';
     }
-
   } else if(ds < 1800){
-    // Phase 3: Strict alternation enforced. Airborne = 28%.
-    // Force switch after every single same-type pair
     if(r < 0.28)      type = 'tall_barrel';
     else if(r < 0.62) type = 'cigarette';
     else              type = 'barrel';
     if(consec >= 1 && last === type){
-      // Must switch
       if(last === 'tall_barrel')  type = r < 0.55 ? 'cigarette' : 'barrel';
       else if(last === 'cigarette') type = r < 0.45 ? 'tall_barrel' : 'barrel';
       else                          type = r < 0.45 ? 'tall_barrel' : 'cigarette';
     }
-    // Occasionally queue a tight pair of same-type as challenge (score 1200+)
     if(ds > 1200 && Math.random() < 0.12){
-      obstaclePattern.pending = type; // next spawn will be same type — tight pair
+      obstaclePattern.pending = type;
     }
-
   } else if(ds < 2500){
-    // Phase 4: Rapid alternation + pairs. Airborne = 32%.
     if(r < 0.32)      type = 'tall_barrel';
     else if(r < 0.63) type = 'cigarette';
     else              type = 'barrel';
-    // Strict alternation — never same as last
     if(last === type){
       if(last === 'tall_barrel')  type = r < 0.55 ? 'cigarette' : 'barrel';
       else if(last === 'cigarette') type = r < 0.50 ? 'tall_barrel' : 'barrel';
       else                          type = r < 0.50 ? 'tall_barrel' : 'cigarette';
     }
-    // Pairs appear more often — forces quick double reactions
     if(Math.random() < 0.18){
       obstaclePattern.pending = type;
     }
-
   } else {
-    // Phase 5 (2500–3000): Elite. Airborne = 35%. Strict alternation + frequent pairs.
     if(r < 0.35)      type = 'tall_barrel';
     else if(r < 0.64) type = 'cigarette';
     else              type = 'barrel';
@@ -842,7 +790,6 @@ function pickObstacleType(ds){
       else if(last === 'cigarette') type = r < 0.52 ? 'tall_barrel' : 'barrel';
       else                          type = r < 0.52 ? 'tall_barrel' : 'cigarette';
     }
-    // Frequent pairs in endgame
     if(Math.random() < 0.25){
       obstaclePattern.pending = type;
     }
@@ -858,7 +805,6 @@ const TIPS=[
   "Regular checkups catch lung cancer early — when it's curable."
 ];
 
-// ─── Lung character ───
 const lung={
   x:0,y:0,w:0,h:0,
   normalH:0,crouchH:0,
@@ -890,7 +836,7 @@ function initTrees(){
 // ═══════════════════════════════════════════
 function jump(){
   if(!gameActive||gamePaused) return;
-  if(!bgPlaying) startBgMusic(); // start music on first interaction
+  if(!bgPlaying) startBgMusic();
   if(!lung.isJumping&&!lung.isCrouching){
     lung.vy=lung.jumpForce; lung.isJumping=true; lung.airCrouch=false;
   }
@@ -932,7 +878,7 @@ cb.addEventListener('mouseup',()=>endCrouch());
 cb.addEventListener('mouseleave',()=>endCrouch());
 
 // ═══════════════════════════════════════════
-//  SHARED COUNTDOWN (pause-resume + quiz-correct use identical design)
+//  SHARED COUNTDOWN
 // ═══════════════════════════════════════════
 function showGameCountdown(onDone){
   const overlay = document.getElementById('resume-countdown-overlay');
@@ -941,7 +887,7 @@ function showGameCountdown(onDone){
   let cnt = 3;
   function tick(){
     numEl.style.animation = 'none';
-    void numEl.offsetWidth; // force reflow for re-trigger
+    void numEl.offsetWidth;
     numEl.style.animation = 'countPop .35s ease';
     numEl.textContent = cnt;
   }
@@ -985,7 +931,6 @@ function startResume(){
   pauseScreen.classList.remove('show');
   if(pauseSunAnim){ cancelAnimationFrame(pauseSunAnim); pauseSunAnim=null; }
   document.getElementById('pause-btn').textContent='⏸';
-  // ← Uses the SAME showGameCountdown as the quiz revival
   showGameCountdown(()=>{
     resumeBtn.style.display='';
     gamePaused=false;
@@ -1039,7 +984,6 @@ function answerQuiz(chosen,correct,list){
     setTimeout(()=>{
       if(quizLungAnim){ cancelAnimationFrame(quizLungAnim); quizLungAnim=null; }
       quizScreen.classList.remove('show');
-      // ← SAME countdown design as pause-resume
       showGameCountdown(()=>{
         lives=1; renderHealthUI();
         gameActive=true;
@@ -1526,7 +1470,6 @@ function update(){
   }
   for(let i=fallingLeaves.length-1;i>=0;i--){ fallingLeaves[i].y+=fallingLeaves[i].speedY; fallingLeaves[i].x+=fallingLeaves[i].speedX; if(fallingLeaves[i].y>GROUND) fallingLeaves.splice(i,1); }
 
-  // Physics
   if(!lung.isCrouching){
     const effectiveGravity = lung.airCrouch ? lung.gravity * 2.8 : lung.gravity;
     lung.vy += effectiveGravity;
@@ -1547,18 +1490,14 @@ function update(){
     }
   }
 
-  // ─── OBSTACLE SPAWN ───
   pixelsSinceLastObstacle += gameSpeed;
   if(pixelsSinceLastObstacle >= nextObstacleGap){
     const type = pickObstacleType(ds);
-    // Track pattern state
     if(type === obstaclePattern.lastType){ obstaclePattern.consecutiveSame++; }
     else { obstaclePattern.consecutiveSame = 0; }
     obstaclePattern.lastType = type;
     obstacles.push(new Obstacle(type));
-    // If a pair is pending, use a tight gap so the player must react quickly twice
     if(obstaclePattern.pending !== null){
-      // Tight pair gap = roughly 1.8–2.4 obstacle-widths in pixels (readable but demanding)
       const pairGap = Math.round(CW * (0.11 + Math.random() * 0.06));
       nextObstacleGap = pairGap;
       pixelsSinceLastObstacle = 0;
@@ -1567,7 +1506,6 @@ function update(){
     }
   }
 
-  // ─── HEALTH ITEM SPAWN ───
   if(lives < 3){
     const nextThreshold = lastHealthScore + HEALTH_SCORE_INTERVAL;
     if(ds >= nextThreshold){
@@ -1579,7 +1517,6 @@ function update(){
     }
   }
 
-  // ─── COLLISIONS ───
   const lb=lungBox();
 
   for(let i=obstacles.length-1;i>=0;i--){
