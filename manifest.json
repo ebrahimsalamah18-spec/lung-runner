@@ -1,0 +1,9 @@
+{
+  "short_name": "LungGame",
+  "name": "Lung Health Obstacle Game",
+  "start_url": "./index.html",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "display": "standalone",
+  "orientation": "landscape"
+}
