@@ -1254,16 +1254,6 @@ const endScreen=document.getElementById('end-screen');
 let endLungAnim=null, endSunAnim=null;
 
 function showEndScreen(won){
-    // 👇 صمام الأمان لمنع التكرار: لو اللعبة غير نشطة بالفعل، اخرج فوراً ولا تفعل شيء
-    if (gameActive === false) return; 
-
-    stopBgMusic();
-    if(!won) setTimeout(playGameOverSound, 120);
-
-    gameActive=false;
-    const finalScore=Math.floor(score);
-    
-    // ... باقي كودك القديم زي ما هو بدون أي تغيير ...
   stopBgMusic();
   if(!won) setTimeout(playGameOverSound, 120);
 
