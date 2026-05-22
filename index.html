@@ -1254,6 +1254,13 @@ const endScreen=document.getElementById('end-screen');
 let endLungAnim=null, endSunAnim=null;
 
 function showEndScreen(won) {
+    if (!gameActive) return; // سطر الحماية: لو اللعبة وقفت، اقفل الباب وماتسجلش حاجة تاني!
+    
+    stopBgMusic();
+    if(!won) setTimeout(playGameOverSound, 120);
+
+    gameActive = false;
+    const finalScore = Math.floor(score);
     stopBgMusic();
     if(!won) setTimeout(playGameOverSound, 120);
 
