@@ -529,12 +529,10 @@ body{ overflow:hidden; }
 
 <!-- HISTORY -->
 <div id="history-section">
-  <h3>📋 History</h3>
-  <div id="history-empty">No games played yet.</div>
-  <table id="history-table" style="display:none;">
-    <thead><tr><th>#</th><th>Score</th><th>Outcome</th></tr></thead>
-    <tbody id="history-tbody"></tbody>
-  </table>
+    <button onclick="closeHistory()" style="position: absolute; top: 10px; right: 10px; z-index: 9999; cursor: pointer; background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px;">إغلاق X</button>
+
+    <h3>HISTORY</h3>
+    <table id="history-table">...</table>
 </div>
 
 <script>
@@ -1903,6 +1901,12 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
         console.error("خطأ في الاتصال بقاعدة البيانات:", err);
     });
   };
+  function closeHistory() {
+    const historySection = document.getElementById('history-section');
+    if (historySection) {
+        historySection.style.display = 'none'; 
+    }
+}
 </script>
 </body>
 </html>
