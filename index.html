@@ -298,7 +298,64 @@ body{ overflow:hidden; }
 </style>
 </head>
 <body>
+<div id="onboarding-screen" class="ui-screen">
+  <div class="modal-box">
+    <h2 dir="rtl" style="color: #a78bfa; margin-bottom: 15px;">أهلاً بك يا بطل!</h2>
+    <p dir="rtl" style="font-size: 12px; margin-bottom: 10px;">ضع الاسم بالعربي كما هو في كشف الأسماء:</p>
+    <input type="text" id="player-arabic-name" dir="rtl" placeholder="الاسم ثلاثي..." maxlength="25">
+    
+    <p dir="rtl" style="font-size: 12px; margin-top: 15px; margin-bottom: 10px;">اختر شكل الرئة (الأفاتار):</p>
+    <div class="avatar-selection">
+      <div class="avatar-option selected" onclick="selectAvatar(1)">🫁</div>
+      <div class="avatar-option" onclick="selectAvatar(2)">🦸‍♂️</div>
+      <div class="avatar-option" onclick="selectAvatar(3)">🛡️</div>
+    </div>
+    
+    <button id="save-profile-btn" onclick="savePlayerProfile()">حفظ ومتابعة</button>
+  </div>
+</div>
 
+<div id="main-menu-screen" class="ui-screen" style="display: none;">
+  <div class="menu-header">
+    <div id="player-display-info">
+      <span id="menu-avatar">🫁</span>
+      <span id="menu-name" dir="rtl">...</span>
+    </div>
+    <div class="high-score-display">HIGH SCORE: <span id="menu-high-score" style="color: #fbbf24;">00000</span></div>
+  </div>
+
+  <h1 class="game-main-title">LUNG CARE<br>RUNNER</h1>
+
+  <div class="menu-buttons">
+    <button id="btn-start-game" class="huge-btn" onclick="startGameFromMenu()">▶ PLAY NOW</button>
+    <button class="menu-btn" onclick="showPopup('how-to-play-popup')">📖 How to Play</button>
+    <button class="menu-btn" onclick="showPopup('history-popup')">📋 Match History</button>
+    <button class="menu-btn" onclick="showPopup('leaderboard-popup')">🏆 Leaderboard</button>
+  </div>
+</div>
+
+<div id="how-to-play-popup" class="popup-overlay" style="display: none;">
+  <div class="popup-content">
+    <h3 style="color: #a78bfa;">How to Play</h3>
+    <ul style="text-align: left; font-size: 12px; margin: 15px 0; padding-left: 20px; color: #e2e8f0; line-height: 1.6;">
+      <li>Tap <b>⬆ JUMP</b> to dodge low obstacles.</li>
+      <li>Hold <b>⬇ SLIDE</b> to pass under tall objects.</li>
+      <li>Collect healthy lungs to restore health.</li>
+      <li>Survive as long as possible!</li>
+    </ul>
+    <button class="close-popup-btn" onclick="closePopups()">Close</button>
+  </div>
+</div>
+
+<script>
+  // سطر مؤقت لإخفاء اللعبة لحد ما ندوس بلاي
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('game-wrap').style.display = 'none';
+    document.getElementById('in-game-controls').style.display = 'none';
+    // أخفينا قسم الهيستوري القديم اللي كان تحت اللعبة
+    if(document.getElementById('history-section')) document.getElementById('history-section').style.display = 'none';
+  });
+</script>
 <div id="page-title">🫁 Pathology Day — Lung Cancer Awareness</div>
 
 <div id="game-wrap">
