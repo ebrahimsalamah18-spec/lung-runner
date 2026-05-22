@@ -1253,39 +1253,26 @@ function answerQuiz(chosen,correct,list){
 const endScreen=document.getElementById('end-screen');
 let endLungAnim=null, endSunAnim=null;
 
-function showEndScreen(won){
+function showEndScreen(won) {
     stopBgMusic();
     if(!won) setTimeout(playGameOverSound, 120);
 
-    gameActive=false;
-    const finalScore=Math.floor(score);
-    
-    if(finalScore > (localStorage.getItem('lungRunnerLocalHigh') || 0)) {
+    gameActive = false;
+    const finalScore = Math.floor(score);
+
+    // تحديث الهاي سكور المحلي
+    if (finalScore > (localStorage.getItem('lungRunnerLocalHigh') || 0)) {
         localStorage.setItem('lungRunnerLocalHigh', finalScore);
         document.getElementById('menu-high-score').textContent = String(finalScore).padStart(5, '0');
     }
-    
-    if(window.saveScoreToFirebase) window.saveScoreToFirebase(finalScore);
-    matchHistory.unshift({score:finalScore,won:won});
+
+    // إرسال السكور لقاعدة بيانات فايربيز
+    if (window.saveScoreToFirebase) {
+        window.saveScoreToFirebase(finalScore);
+    }
+
+    matchHistory.unshift({score: finalScore, won: won});
     updateHistoryUI();
-} // 👈 تأكد إن القوس ده يقفل الدالة ومفيش قوس زيادة أو ناقص!
-  stopBgMusic();
-  if(!won) setTimeout(playGameOverSound, 120);
-
-  gameActive=false;
-  const finalScore=Math.floor(score);
-  // جوا دالة showEndScreen
-window.saveScoreToFirebase(finalScore);
-  // تحديث الهاي سكور المحلي
-if(finalScore > (localStorage.getItem('lungRunnerLocalHigh') || 0)) {
-    localStorage.setItem('lungRunnerLocalHigh', finalScore);
-    document.getElementById('menu-high-score').textContent = String(finalScore).padStart(5, '0');
-}
-// إرسال السكور لقاعدة بيانات فايربيز
-if(window.saveScoreToFirebase) window.saveScoreToFirebase(finalScore);
-  matchHistory.unshift({score:finalScore,won});
-  updateHistoryUI();
-
   endScreen.classList.add('show');
   endScreen.classList.toggle('dark-end',!won);
   document.getElementById('end-title').textContent=won?'VICTORY!!':'GAME OVER!!';
