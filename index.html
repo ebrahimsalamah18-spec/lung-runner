@@ -1917,16 +1917,6 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
         console.error("خطأ في الاتصال بقاعدة البيانات أثناء الحفظ:", err);
     });
   };
-  // دالة الإغلاق الإجبارية لكل النوافذ المنبثقة
-window.closePopups = function() {
-  const historyPopup = document.getElementById('history-popup');
-  const leaderboardPopup = document.getElementById('leaderboard-popup');
-  const howToPlayPopup = document.getElementById('how-to-play-popup');
-  
-  if(historyPopup) historyPopup.style.setProperty('display', 'none', 'important');
-  if(leaderboardPopup) leaderboardPopup.style.setProperty('display', 'none', 'important');
-  if(howToPlayPopup) howToPlayPopup.style.setProperty('display', 'none', 'important');
-};
 </script>
 </body>
 </html>
