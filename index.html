@@ -295,10 +295,129 @@ body{ overflow:hidden; }
 .hist-outcome-win{color:#10b981;}
 .hist-outcome-lose{color:#ef4444;}
 #history-empty{color:#334155;font-size:11px;text-align:center;padding:8px;letter-spacing:1px;}
+/* ── UI SCREENS (Main Menu & Onboarding) ── */
+.ui-screen {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: #080b18; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.modal-box {
+  background: #1e293b; padding: 25px; border-radius: 12px; border: 2px solid #3b82f6;
+  width: 90%; max-width: 350px; text-align: center; box-shadow: 0 0 20px rgba(59,130,246,0.3);
+}
+#player-arabic-name {
+  width: 100%; padding: 10px; font-size: 16px; font-family: Tahoma, Arial, sans-serif;
+  border-radius: 6px; border: 1px solid #94a3b8; outline: none; margin-bottom: 10px;
+}
+.avatar-selection { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+.avatar-option {
+  font-size: 35px; cursor: pointer; padding: 5px; border-radius: 50%; border: 2px solid transparent;
+  transition: transform 0.1s; background: #0f172a;
+}
+.avatar-option.selected { border-color: #10b981; transform: scale(1.15); background: #064e3b; }
+#save-profile-btn {
+  width: 100%; padding: 12px; font-size: 16px; font-weight: bold; font-family: Tahoma, Arial;
+  background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;
+}
+
+/* ── MAIN MENU ── */
+.menu-header {
+  position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between; align-items: center;
+  background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 10px;
+}
+#player-display-info { display: flex; align-items: center; gap: 8px; font-weight: bold; font-family: Tahoma; }
+.high-score-display { font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+.game-main-title {
+  font-size: clamp(35px, 10vw, 50px); font-weight: 900; text-align: center; line-height: 1.1;
+  background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 50px; text-shadow: 0 0 20px rgba(167,139,250,0.3);
+}
+.menu-buttons { display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 300px; }
+.huge-btn {
+  padding: 20px; font-size: 22px; font-weight: bold; letter-spacing: 2px;
+  background: #10b981; color: #fff; border: 3px solid #fff; border-radius: 12px;
+  box-shadow: 0 8px 0 #065f46; cursor: pointer; transition: transform 0.1s;
+}
+.huge-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #065f46; }
+.menu-btn {
+  padding: 12px; font-size: 14px; font-weight: bold; letter-spacing: 1px;
+  background: #3b82f6; color: #fff; border: 2px solid #60a5fa; border-radius: 8px; cursor: pointer;
+}
+
+/* ── POPUPS ── */
+.popup-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center;
+}
+.popup-content {
+  background: #1e293b; width: 90%; max-width: 400px; padding: 20px;
+  border-radius: 10px; border: 1px solid #475569; text-align: center;
+}
+.close-popup-btn {
+  margin-top: 15px; padding: 8px 20px; background: #ef4444; border: none;
+  color: white; font-weight: bold; border-radius: 6px; cursor: pointer;
+}
 </style>
 </head>
 <body>
+<div id="onboarding-screen" class="ui-screen">
+  <div class="modal-box">
+    <h2 dir="rtl" style="color: #a78bfa; margin-bottom: 15px;">أهلاً بك يا بطل!</h2>
+    <p dir="rtl" style="font-size: 12px; margin-bottom: 10px;">ضع الاسم بالعربي كما هو في كشف الأسماء:</p>
+    <input type="text" id="player-arabic-name" dir="rtl" placeholder="الاسم ثلاثي..." maxlength="25">
+    
+    <p dir="rtl" style="font-size: 12px; margin-top: 15px; margin-bottom: 10px;">اختر شكل الرئة (الأفاتار):</p>
+    <div class="avatar-selection">
+      <div class="avatar-option selected" onclick="selectAvatar(1)">🫁</div>
+      <div class="avatar-option" onclick="selectAvatar(2)">🦸‍♂️</div>
+      <div class="avatar-option" onclick="selectAvatar(3)">🛡️</div>
+    </div>
+    
+    <button id="save-profile-btn" onclick="savePlayerProfile()">حفظ ومتابعة</button>
+  </div>
+</div>
 
+<div id="main-menu-screen" class="ui-screen" style="display: none;">
+  <div class="menu-header">
+    <div id="player-display-info">
+      <span id="menu-avatar">🫁</span>
+      <span id="menu-name" dir="rtl">...</span>
+    </div>
+    <div class="high-score-display">HIGH SCORE: <span id="menu-high-score" style="color: #fbbf24;">00000</span></div>
+  </div>
+
+  <h1 class="game-main-title">LUNG CARE<br>RUNNER</h1>
+
+  <div class="menu-buttons">
+    <button id="btn-start-game" class="huge-btn" onclick="startGameFromMenu()">▶ PLAY NOW</button>
+    <button class="menu-btn" onclick="showPopup('how-to-play-popup')">📖 How to Play</button>
+    <button class="menu-btn" onclick="showPopup('history-popup')">📋 Match History</button>
+    <button class="menu-btn" onclick="showPopup('leaderboard-popup')">🏆 Leaderboard</button>
+  </div>
+</div>
+
+<div id="how-to-play-popup" class="popup-overlay" style="display: none;">
+  <div class="popup-content">
+    <h3 style="color: #a78bfa;">How to Play</h3>
+    <ul style="text-align: left; font-size: 12px; margin: 15px 0; padding-left: 20px; color: #e2e8f0; line-height: 1.6;">
+      <li>Tap <b>⬆ JUMP</b> to dodge low obstacles.</li>
+      <li>Hold <b>⬇ SLIDE</b> to pass under tall objects.</li>
+      <li>Collect healthy lungs to restore health.</li>
+      <li>Survive as long as possible!</li>
+    </ul>
+    <button class="close-popup-btn" onclick="closePopups()">Close</button>
+  </div>
+</div>
+
+<script>
+  // سطر مؤقت لإخفاء اللعبة لحد ما ندوس بلاي
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('game-wrap').style.display = 'none';
+    document.getElementById('in-game-controls').style.display = 'none';
+    // أخفينا قسم الهيستوري القديم اللي كان تحت اللعبة
+    if(document.getElementById('history-section')) document.getElementById('history-section').style.display = 'none';
+  });
+</script>
 <div id="page-title">🫁 Pathology Day — Lung Cancer Awareness</div>
 
 <div id="game-wrap">
@@ -397,6 +516,78 @@ body{ overflow:hidden; }
 // ═══════════════════════════════════════════
 //  CANVAS REFS
 // ═══════════════════════════════════════════
+// متغيرات بروفايل اللاعب
+let playerProfile = { name: "", avatar: "🫁" };
+let selectedAvatarId = 1;
+
+window.addEventListener('load', () => {
+  // فحص هل اللاعب مسجل اسمه قبل كده؟
+  const savedData = localStorage.getItem('lungRunnerProfile');
+  if (savedData) {
+    playerProfile = JSON.parse(savedData);
+    document.getElementById('onboarding-screen').style.display = 'none';
+    showMainMenu();
+  } else {
+    document.getElementById('main-menu-screen').style.display = 'none';
+  }
+});
+
+function selectAvatar(id) {
+  selectedAvatarId = id;
+  const options = document.querySelectorAll('.avatar-option');
+  options.forEach(opt => opt.classList.remove('selected'));
+  options[id-1].classList.add('selected');
+  
+  if(id === 1) playerProfile.avatar = "🫁";
+  else if(id === 2) playerProfile.avatar = "🦸‍♂️";
+  else if(id === 3) playerProfile.avatar = "🛡️";
+}
+
+function savePlayerProfile() {
+  const nameInput = document.getElementById('player-arabic-name').value.trim();
+  if (nameInput === "") {
+    alert("برجاء إدخال اسمك أولاً!");
+    return;
+  }
+  playerProfile.name = nameInput;
+  localStorage.setItem('lungRunnerProfile', JSON.stringify(playerProfile));
+  
+  document.getElementById('onboarding-screen').style.display = 'none';
+  showMainMenu();
+}
+
+function showMainMenu() {
+  document.getElementById('main-menu-screen').style.display = 'flex';
+  document.getElementById('menu-name').textContent = playerProfile.name;
+  document.getElementById('menu-avatar').textContent = playerProfile.avatar;
+  
+  // سحب أعلى سكور مسجل على الجهاز حالياً
+  const localHigh = localStorage.getItem('lungRunnerLocalHigh') || 0;
+  document.getElementById('menu-high-score').textContent = String(localHigh).padStart(5, '0');
+}
+
+function showPopup(id) { document.getElementById(id).style.display = 'flex'; }
+function closePopups() {
+  document.getElementById('how-to-play-popup').style.display = 'none';
+}
+
+function startGameFromMenu() {
+  // 1. طلب تشغيل الشاشة الكاملة وقلب الهاتف بالعرض
+  const docEl = document.documentElement;
+  if(docEl.requestFullscreen) docEl.requestFullscreen().catch(()=>{});
+  if(screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(err => console.log("Orientation lock not supported"));
+  }
+  
+  // 2. إخفاء المنيو الطولية وإظهار اللعبة
+  document.getElementById('main-menu-screen').style.display = 'none';
+  document.getElementById('page-title').style.display = 'block';
+  document.getElementById('game-wrap').style.display = 'block';
+  document.getElementById('in-game-controls').style.display = 'flex';
+
+  // 3. إعادة ضبط اللعبة وبدايتها
+  resetGame(); 
+}
 const gameCanvas  = document.getElementById('gameCanvas');
 const ctx         = gameCanvas.getContext('2d');
 const confettiCvs = document.getElementById('confetti-canvas');
