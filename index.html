@@ -1259,6 +1259,8 @@ function showEndScreen(won){
 
   gameActive=false;
   const finalScore=Math.floor(score);
+  // جوا دالة showEndScreen
+window.saveScoreToFirebase(finalScore);
   // تحديث الهاي سكور المحلي
 if(finalScore > (localStorage.getItem('lungRunnerLocalHigh') || 0)) {
     localStorage.setItem('lungRunnerLocalHigh', finalScore);
@@ -1835,39 +1837,51 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
-
-  // تحديث جدول المتصدرين لايف
   const scoresRef = query(ref(db, 'scores'), orderByChild('score'), limitToLast(10));
+
   onValue(scoresRef, (snapshot) => {
     const tbody = document.getElementById('leaderboard-tbody');
     if(!tbody) return;
-    tbody.innerHTML = '';
-    const data = [];
-    snapshot.forEach(child => { data.push(child.val()); });
-    data.sort((a,b) => b.score - a.score);
     
-    if(data.length === 0) {
-       tbody.innerHTML = '<tr><td colspan="3" style="padding:10px;">لا توجد سجلات بعد. كن الأول!</td></tr>';
+    // تفريغ الجدول للبدء من جديد
+    tbody.innerHTML = '';
+    const scores = [];
+    
+    snapshot.forEach((child) => {
+      scores.push(child.val());
+    });
+
+    // ترتيب تنازلي (الأعلى في الأعلى)
+    scores.sort((a, b) => b.score - a.score);
+
+    if(scores.length === 0) {
+       tbody.innerHTML = '<tr><td colspan="3" style="padding:10px;">لا توجد سجلات بعد.. كن الأول!</td></tr>';
     } else {
-       data.forEach((item, index) => {
-          let medal = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `#${index+1}`));
-          let nameDisplay = (item.avatar || "🫁") + " " + item.name;
-          tbody.innerHTML += `<tr style="border-bottom: 1px solid #1e293b;"><td style="padding:8px;">${medal}</td><td>${nameDisplay}</td><td style="color:#fbbf24; font-weight:bold;">${String(item.score).padStart(5,'0')}</td></tr>`;
+       scores.forEach((item, index) => {
+          let rankIcon = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `${index+1}`));
+          let row = `
+            <tr style="border-bottom: 1px solid #1e293b;">
+              <td style="padding:10px; font-weight:bold;">${rankIcon}</td>
+              <td style="padding:10px;">${item.avatar || '🫁'} ${item.name || 'مجهول'}</td>
+              <td style="padding:10px; color:#fbbf24; font-weight:bold;">${item.score}</td>
+            </tr>`;
+          tbody.innerHTML += row;
        });
     }
   });
 
-  // دالة الحفظ
+  // دالة الحفظ مع التحقق من وجود بيانات
   window.saveScoreToFirebase = function(score) {
-    const savedData = localStorage.getItem('lungRunnerProfile');
-    if (savedData) {
-       const profile = JSON.parse(savedData);
-       push(ref(db, 'scores'), { 
-         name: profile.name, 
-         avatar: profile.avatar,
-         score: Math.floor(score) 
-       });
-    }
+    const rawData = localStorage.getItem('lungRunnerProfile');
+    if (!rawData) return; 
+    
+    const profile = JSON.parse(rawData);
+    push(ref(db, 'scores'), { 
+      name: profile.name, 
+      avatar: profile.avatar,
+      score: Math.floor(score),
+      timestamp: Date.now()
+    }).catch(err => console.error("Firebase Error:", err));
   };
 </script>
 </body>
