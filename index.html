@@ -1254,9 +1254,6 @@ const endScreen=document.getElementById('end-screen');
 let endLungAnim=null, endSunAnim=null;
 
 function showEndScreen(won){
-    // 👇 صمام الأمان (تأكد إنه مكتوب كدة بالظبط وتحته الأقواس مقفولة صح)
-    if (gameActive === false) return; 
-
     stopBgMusic();
     if(!won) setTimeout(playGameOverSound, 120);
 
@@ -1842,7 +1839,6 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, push, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // 1. إعدادات فايربيز (صحيحة وتعمل بنجاح)
   const firebaseConfig = {
     apiKey: "AIzaSyAckunQUs9bPhZpIofTG9DBfgsv5RWwiAI",
     authDomain: "lungrunner-2d119.firebaseapp.com",
@@ -1856,18 +1852,13 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // 2. كود قراءة وعرض الـ Leaderboard وتحديثه تلقائياً فوراً عند الجميع
-  console.log("جاري بدء الاستماع لقاعدة البيانات وعرض قائمة المتصدرين...");
+  // 1. قراءة وعرض الـ Leaderboard وتحديثه تلقائياً
   const scoresRef = query(ref(db, 'scores'), orderByChild('score'), limitToLast(10));
 
   onValue(scoresRef, (snapshot) => {
     const tbody = document.getElementById('leaderboard-tbody');
-    if(!tbody) {
-      console.error("خطأ: لم يتم العثور على عنصر 'leaderboard-tbody' في الـ HTML الخاص بك!");
-      return;
-    }
+    if(!tbody) return;
     
-    // تفريغ الجدول ومسح كلمة Loading...
     tbody.innerHTML = '';
     const scores = [];
     
@@ -1875,7 +1866,6 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
       scores.push(child.val());
     });
 
-    // ترتيب تنازلي (الأعلى سكور يظهر في الأول)
     scores.sort((a, b) => b.score - a.score);
 
     if(scores.length === 0) {
@@ -1891,20 +1881,27 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
             </tr>`;
           tbody.innerHTML += row;
        });
-       console.log("تم تحديث قائمة المتصدرين بنجاح!");
     }
-  }, (error) => {
-    console.error("خطأ أثناء قراءة البيانات من فايربيز:", error);
   });
 
-  // 3. كود حفظ السكور عند الخسارة (الكود الناجح الخاص بك)
+  // 2. صمام أمان زمني لمنع التكرار نهائياً (مبني لحماية قاعدة البيانات)
+  let lastSavedTime = 0;
+
   window.saveScoreToFirebase = function(score) {
-    console.log("محاولة إرسال السكور...");
-    const savedData = localStorage.getItem('lungRunnerProfile');
-    if (!savedData) {
-        console.error("خطأ: لم يتم العثور على اسم اللاعب في الـ LocalStorage!");
+    const now = Date.now();
+    
+    // ✋ إذا كانت المسافة بين المحاولة الحالية والمحاولة السابقة أقل من 3 ثوانٍ، احظرها فوراً ولا ترسلها
+    if (now - lastSavedTime < 3000) {
+        console.log("🛡️ تم رصد محاولة مكررة؛ تم حظر الإرسال لحماية الليدربورد من التكرار.");
         return;
     }
+    // تحديث وقت آخر إرسال ناجح
+    lastSavedTime = now; 
+
+    console.log("محاولة إرسال السكور...");
+    const savedData = localStorage.getItem('lungRunnerProfile');
+    if (!savedData) return;
+    
     const profile = JSON.parse(savedData);
     push(ref(db, 'scores'), { 
       name: profile.name, 
@@ -1912,9 +1909,9 @@ window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); }
       score: Math.floor(score),
       timestamp: Date.now()
     }).then(() => {
-        console.log("نجاح! تم إرسال السكور.");
+        console.log("نجاح! تم إرسال السكور الحقيقي مرة واحدة فقط.");
     }).catch(err => {
-        console.error("خطأ في الاتصال بقاعدة البيانات أثناء الحفظ:", err);
+        console.error("خطأ في الاتصال بقاعدة البيانات:", err);
     });
   };
 </script>
