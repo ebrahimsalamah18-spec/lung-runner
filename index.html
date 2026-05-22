@@ -408,7 +408,30 @@ body{ overflow:hidden; }
     <button class="close-popup-btn" onclick="closePopups()">Close</button>
   </div>
 </div>
+id="how-to-play-popup"<div id="history-popup" class="popup-overlay" style="display: none;">
+  <div class="popup-content">
+    <h3 style="color: #a78bfa; margin-bottom: 15px;">📋 Match History</h3>
+    <div id="history-empty" style="color:#94a3b8; font-size:12px;">No games played yet.</div>
+    <table id="history-table" style="display:none; width:100%; color:#fff; font-size:12px; text-align:center; border-collapse: collapse;">
+      <thead><tr style="color:#fbbf24; border-bottom: 1px solid #475569;"><th style="padding:8px;">#</th><th>Score</th><th>Result</th></tr></thead>
+      <tbody id="history-tbody"></tbody>
+    </table>
+    <button class="close-popup-btn" onclick="closePopups()">Close</button>
+  </div>
+</div>
 
+<div id="leaderboard-popup" class="popup-overlay" style="display: none;">
+  <div class="popup-content">
+    <h3 style="color: #fbbf24; margin-bottom: 15px;">🏆 Global Leaderboard</h3>
+    <table style="width:100%; color:#fff; font-size:12px; text-align:center; border-collapse: collapse;">
+      <thead><tr style="color:#a78bfa; border-bottom: 1px solid #475569;"><th style="padding:8px;">Rank</th><th>Name</th><th>Score</th></tr></thead>
+      <tbody id="leaderboard-tbody">
+        <tr><td colspan="3" style="padding:10px;">Loading...</td></tr>
+      </tbody>
+    </table>
+    <button class="close-popup-btn" onclick="closePopups()">Close</button>
+  </div>
+</div>
 <script>
   // سطر مؤقت لإخفاء اللعبة لحد ما ندوس بلاي
   document.addEventListener("DOMContentLoaded", () => {
@@ -467,6 +490,7 @@ body{ overflow:hidden; }
       </div>
       <div id="pause-countdown"></div>
       <button class="resume-btn" id="resume-btn" onclick="startResume()">▶ RESUME</button>
+      <button class="resume-btn" onclick="confirmGoHome()" style="background:#ef4444; border-color:#b91c1c; margin-top:8px;">🏠 MAIN MENU</button>
     </div>
   </div>
 
@@ -482,6 +506,7 @@ body{ overflow:hidden; }
       <div class="end-score-label">SCORE</div>
       <div class="end-score-val" id="end-score-val">00000</div>
       <button class="play-again-btn red" id="play-again-btn" onclick="event.stopPropagation();resetGame();">PLAY AGAIN</button>
+      <button class="play-again-btn" onclick="goHomeFromEnd()" style="background:#3b82f6; border-color:#2563eb; margin-top:8px; padding: 10px 26px;">🏠 MAIN MENU</button>
     </div>
     <div class="end-col">
       <div class="sun-tip-bubble" id="end-tip-text">Loading tip...</div>
@@ -567,8 +592,38 @@ function showMainMenu() {
 }
 
 function showPopup(id) { document.getElementById(id).style.display = 'flex'; }
-function closePopups() {
+  function closePopups() {
   document.getElementById('how-to-play-popup').style.display = 'none';
+  document.getElementById('history-popup').style.display = 'none';
+  document.getElementById('leaderboard-popup').style.display = 'none';
+}
+
+function confirmGoHome() {
+  if(confirm("هل أنت متأكد أنك تريد العودة للقائمة الرئيسية؟ ستفقد تقدمك في هذه الجولة!")) {
+     document.getElementById('pause-screen').classList.remove('show');
+     goHomeAction();
+  }
+}
+
+function goHomeFromEnd() {
+   document.getElementById('end-screen').classList.remove('show');
+   goHomeAction();
+}
+
+function goHomeAction() {
+   gameActive = false;
+   stopBgMusic();
+   document.getElementById('game-wrap').style.display = 'none';
+   document.getElementById('in-game-controls').style.display = 'none';
+   document.getElementById('page-title').style.display = 'none';
+   document.getElementById('main-menu-screen').style.display = 'flex';
+   
+   // الخروج من وضع الشاشة الكاملة
+   if (document.fullscreenElement) {
+     document.exitFullscreen().catch(()=>{});
+   }
+   
+   updateHistoryUI(); // تحديث جدول الجولات
 }
 
 function startGameFromMenu() {
@@ -1204,6 +1259,13 @@ function showEndScreen(won){
 
   gameActive=false;
   const finalScore=Math.floor(score);
+  // تحديث الهاي سكور المحلي
+if(finalScore > (localStorage.getItem('lungRunnerLocalHigh') || 0)) {
+    localStorage.setItem('lungRunnerLocalHigh', finalScore);
+    document.getElementById('menu-high-score').textContent = String(finalScore).padStart(5, '0');
+}
+// إرسال السكور لقاعدة بيانات فايربيز
+if(window.saveScoreToFirebase) window.saveScoreToFirebase(finalScore);
   matchHistory.unshift({score:finalScore,won});
   updateHistoryUI();
 
@@ -1756,6 +1818,57 @@ setNextGap(0);
 loop();
 
 window.addEventListener('resize',()=>{ sizeCanvas(); scaleLung(); initTrees(); });
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAckunQUs9bPhZpIofTG9DBfgsv5RWwiAI",
+    authDomain: "lungrunner-2d119.firebaseapp.com",
+    databaseURL: "https://lungrunner-2d119-default-rtdb.firebaseio.com",
+    projectId: "lungrunner-2d119",
+    storageBucket: "lungrunner-2d119.firebasestorage.app",
+    messagingSenderId: "506677064938",
+    appId: "1:506677064938:web:c1943918035cd715465393"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // تحديث جدول المتصدرين لايف
+  const scoresRef = query(ref(db, 'scores'), orderByChild('score'), limitToLast(10));
+  onValue(scoresRef, (snapshot) => {
+    const tbody = document.getElementById('leaderboard-tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    const data = [];
+    snapshot.forEach(child => { data.push(child.val()); });
+    data.sort((a,b) => b.score - a.score);
+    
+    if(data.length === 0) {
+       tbody.innerHTML = '<tr><td colspan="3" style="padding:10px;">لا توجد سجلات بعد. كن الأول!</td></tr>';
+    } else {
+       data.forEach((item, index) => {
+          let medal = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `#${index+1}`));
+          let nameDisplay = (item.avatar || "🫁") + " " + item.name;
+          tbody.innerHTML += `<tr style="border-bottom: 1px solid #1e293b;"><td style="padding:8px;">${medal}</td><td>${nameDisplay}</td><td style="color:#fbbf24; font-weight:bold;">${String(item.score).padStart(5,'0')}</td></tr>`;
+       });
+    }
+  });
+
+  // دالة الحفظ
+  window.saveScoreToFirebase = function(score) {
+    const savedData = localStorage.getItem('lungRunnerProfile');
+    if (savedData) {
+       const profile = JSON.parse(savedData);
+       push(ref(db, 'scores'), { 
+         name: profile.name, 
+         avatar: profile.avatar,
+         score: Math.floor(score) 
+       });
+    }
+  };
 </script>
 </body>
 </html>
